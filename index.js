@@ -5,7 +5,7 @@ const app = express()
 const PORT = 3000
 
 app.use(bodyParser.urlencoded({extended: true}))
-app.use(bodyParser.json({extended: true}))
+app.use(bodyParser.json())
 
 const users = require("./data/users")
 const posts = require("./data/posts")
@@ -39,9 +39,23 @@ app
         res.json(users[users.length -1])
     })
 
-app.get('/posts', (req, res) => {
+app
+    .route('/posts')
+    .get((req, res) => {
     res.json(posts)
 })
+    .post((req, res) => {
+        if(req.body.userId && req.body.title && req.body.content){
+            const post = {
+                id: posts[posts.length -1].id + 1,
+                userId: req.body.userId,
+                title: req.body.title,
+                content: req.body.content
+            }
+            posts.push(post)
+            res.json(posts[posts.length -1])
+        } else res.json({error: "Insufficient Data"})
+    })
 
 app
     .route('/users/:usersID')
@@ -74,11 +88,35 @@ app
         else {res.status(404).send("User not found")} 
     })
 
-app.get('/posts/:postsID', (req, res) => {
+app
+    .route('/posts/:postsID')
+    .get((req, res) => {
     const post = posts.find((post) => post.id == req.params.postsID)
     if (post) {res.json(post)}
     else{res.status(404).send("Post not found")}
 })
+    .patch((req, res)=> {
+        const post = posts.find((post, i) => {
+            if(post.id == req.params.postsID){
+                for (const key in req.body){
+                    posts[i][key] = req.body[key]
+                }
+                return true
+            }
+        })
+        if(post) res.json(post)
+        else {res.status(404).send("Post not found")}
+    })
+    .delete((req, res) => {
+        const post = posts.find((post, i) => {
+            if(post.id == req.params.postsID){
+                posts.splice(i, 1)
+                return true
+            }
+        })
+        if (post) res.json(post)
+        else {res.status(404).send("Post not found")}
+    })
 
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
