@@ -6,7 +6,16 @@ const comments = require("../data/comments")
 router
     .route('/')
     .get((req, res)=>{
-        res.json(comments)
+        const {userId, postId} = req.query
+        let filteredComments = comments
+        
+        if(userId) {
+            filteredComments = filteredComments.filter(comment => comment.userId == userId)
+        }
+        if (postId){
+            filteredComments = filteredComments.filter(comment => comment.postId == postId)
+        }
+        res.json(filteredComments)
     })
     .post((req,res) => {
         if(req.body.userId && req.body.postId && req.body.body){
